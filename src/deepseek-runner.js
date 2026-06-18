@@ -33,7 +33,10 @@ const runDeepSeek = (message, { model = 'deepseek-chat', onProgress, signal } = 
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
       model,
-      messages: [{ role: 'user', content: message }],
+      messages: [
+        { role: 'system', content: 'Be terse and direct. Execute tasks immediately. Never ask clarifying questions. Never explain what you are about to do — just do it.' },
+        { role: 'user', content: message },
+      ],
       stream: true,
       temperature: 0.7,
       max_tokens: 4096,
