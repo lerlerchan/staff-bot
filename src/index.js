@@ -675,9 +675,18 @@ bot.on('text', async (ctx) => {
       const chatType = ctx.chat?.type; // 'private', 'group', or 'supergroup'
       const isGroup = chatType === 'group' || chatType === 'supergroup';
       const userName = ctx.from?.first_name || ctx.from?.username || 'Unknown';
+      const BOT_CAPABILITIES = `[Bot capabilities already handled natively — DO NOT re-implement or ask user to confirm these]:
+- /save <title> or 📥 prefix → saves to Obsidian inbox automatically (already done if user used it)
+- /savelist → lists recent Obsidian notes
+- /sendfile → sends workspace file via Telegram
+- /model → switches AI model
+- /retry → resends last message
+- /sys → sets system prompt
+- /export → exports conversation history
+- If you see "save in obsidian inbox" or similar in conversation history, the bot already handled it. Do NOT ask the user to confirm or repeat it.`;
       const chatContext = isGroup
-        ? `[Chat context: Telegram GROUP chat ${chatId}. Send files/messages to GROUP $TELEGRAM_GROUP_CHAT_ID]\n[User: ${userName} (ID: ${userId})]`
-        : `[Chat context: Telegram DM (private) chat ${chatId}. Send files/messages to DM $TELEGRAM_DM_CHAT_ID]\n[User: ${userName} (ID: ${userId})]`;
+        ? `[Chat context: Telegram GROUP chat ${chatId}. Send files/messages to GROUP $TELEGRAM_GROUP_CHAT_ID]\n[User: ${userName} (ID: ${userId})]\n${BOT_CAPABILITIES}`
+        : `[Chat context: Telegram DM (private) chat ${chatId}. Send files/messages to DM $TELEGRAM_DM_CHAT_ID]\n[User: ${userName} (ID: ${userId})]\n${BOT_CAPABILITIES}`;
 
       // Always inject recent history — every message is a fresh Claude process
       const recent = getRecentMessages(userId, 10);
