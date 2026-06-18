@@ -3,8 +3,24 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const dns = require('dns').promises;
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
+
+// Blocks RFC 1918, loopback, link-local, and other reserved ranges
+const PRIVATE_IP_RE = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|::1$|fc00:|fe80:)/;
+
+async function isSafeUrl(rawUrl) {
+  let parsed;
+  try { parsed = new URL(rawUrl); } catch { return false; }
+  if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+  try {
+    const addrs = await dns.resolve4(parsed.hostname);
+    return addrs.length > 0 && addrs.every(ip => !PRIVATE_IP_RE.test(ip));
+  } catch {
+    return false;
+  }
+}
 
 const VAULT_PATH = path.resolve(
   process.env.OBSIDIAN_VAULT_PATH || path.join(os.homedir(), 'ObsidianVault')
@@ -101,6 +117,9 @@ function classifyTags(title, content) {
 }
 
 async function fetchUrl(url) {
+  if (!(await isSafeUrl(url))) {
+    throw new Error('URL resolves to a private or reserved address');
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {

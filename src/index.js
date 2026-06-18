@@ -98,6 +98,7 @@ for (const key of REQUIRED_ENV) {
 const { Telegraf } = require('telegraf');
 const { runClaude, isComplexTask, shouldUseOllama, detectMcpServers } = require('./claude-runner');
 const { runOllama, isOllamaAvailable, getAvailableModels } = require('./ollama-runner');
+const { runDeepSeek, DEEPSEEK_MODELS } = require('./deepseek-runner');
 const { logMessage, getRecentMessages, getPreferredModel, setPreferredModel, logEvent, getSessionEvents, getUserMaxTurns, setUserMaxTurns } = require('./database');
 const { isUserAllowed, splitMessage, markdownToHtml } = require('./utils');
 const { saveNote, listNotes } = require('./handlers/obsidianSave');
@@ -264,6 +265,7 @@ const MODEL_LABELS = {
   haiku:  'Haiku (fastest)',
   sonnet: 'Sonnet 4.6',
   opus:   'Opus 4.6 (powerful)',
+  ...Object.fromEntries(Object.entries(DEEPSEEK_MODELS).map(([k, v]) => [`deepseek:${k}`, v])),
 };
 
 bot.command('model', async (ctx) => {
@@ -274,6 +276,15 @@ bot.command('model', async (ctx) => {
     [{ text: `${current === 'sonnet' ? '✅ ' : ''}Sonnet 4.6`, callback_data: 'model:sonnet' }],
     [{ text: `${current === 'opus' ? '✅ ' : ''}Opus 4.6 (powerful)`, callback_data: 'model:opus' }],
   ];
+
+  // Append DeepSeek models if API key configured
+  if (process.env.DEEPSEEK_API_KEY) {
+    keyboard.push([{ text: '── DeepSeek ──', callback_data: 'model:noop' }]);
+    for (const [modelId, label] of Object.entries(DEEPSEEK_MODELS)) {
+      const key = `deepseek:${modelId}`;
+      keyboard.push([{ text: `${current === key ? '✅ ' : ''}${label}`, callback_data: `model:${key}` }]);
+    }
+  }
 
   // Append available Ollama models if Ollama is reachable
   const ollamaModels = await getAvailableModels();
@@ -301,11 +312,14 @@ bot.on('callback_query', async (ctx) => {
   if (value === 'noop') return ctx.answerCbQuery();
 
   const isOllamaModel = value.startsWith('ollama:');
+  const isDeepSeekModel = value.startsWith('deepseek:');
   const isClaudeModel = ['auto', 'haiku', 'sonnet', 'opus'].includes(value);
-  if (!isOllamaModel && !isClaudeModel) return ctx.answerCbQuery('Unknown model');
+  if (!isOllamaModel && !isDeepSeekModel && !isClaudeModel) return ctx.answerCbQuery('Unknown model');
 
   setPreferredModel(ctx.from.id.toString(), value);
-  const label = isOllamaModel ? value.replace('ollama:', '') + ' (Ollama)' : (MODEL_LABELS[value] || value);
+  const label = isOllamaModel
+    ? value.replace('ollama:', '') + ' (Ollama)'
+    : (MODEL_LABELS[value] || value);
   await ctx.answerCbQuery(`Switched to ${label}`);
   await ctx.editMessageText(
     `Model set to: *${label}*\n\nAll your messages will now use this model. Use /model to change it.`,
@@ -492,6 +506,8 @@ bot.on('text', async (ctx) => {
   const preferredModel = getPreferredModel(userId);
   const isOllamaPreferred = preferredModel.startsWith('ollama:');
   const ollamaModelName = isOllamaPreferred ? preferredModel.slice(7) : null; // strip "ollama:"
+  const isDeepSeekPreferred = preferredModel.startsWith('deepseek:');
+  const deepSeekModelName = isDeepSeekPreferred ? preferredModel.slice(9) : null; // strip "deepseek:"
 
   // Tasks that require file tool access — must use Claude even if Ollama is selected
   // IMPORTANT: compute needsClaude BEFORE useOllama so the guard works correctly
@@ -513,8 +529,12 @@ bot.on('text', async (ctx) => {
   const effectiveOllama = isOllamaPreferred && !needsClaude;
   const effectiveOllamaModel = effectiveOllama ? ollamaModelName : null;
 
+  // DeepSeek: always use when preferred (no file-tool restriction — response only)
+  const effectiveDeepSeek = isDeepSeekPreferred;
+
   let statusMsg = '🤔 Processing...';
-  if (effectiveOllama) statusMsg = `🦙 Processing with ${ollamaModelName}...`;
+  if (effectiveDeepSeek) statusMsg = `🔵 Processing with ${DEEPSEEK_MODELS[deepSeekModelName] || deepSeekModelName}...`;
+  else if (effectiveOllama) statusMsg = `🦙 Processing with ${ollamaModelName}...`;
   else if (isOllamaPreferred && needsClaude) statusMsg = `🤔 Processing with Claude (file task — Ollama has no file tools)...`;
   else if (preferredModel !== 'auto') statusMsg = `🤔 Processing with ${MODEL_LABELS[preferredModel] || preferredModel}...`;
   else if (complex) statusMsg = '🧠 Processing with Opus...';
@@ -590,9 +610,14 @@ bot.on('text', async (ctx) => {
       }
     }
 
-    // Route to Ollama (with Claude fallback) or Claude directly
+    // Route to DeepSeek, Ollama (with Claude fallback), or Claude directly
     let result;
-    if (effectiveOllama) {
+    if (effectiveDeepSeek) {
+      result = await runDeepSeek(finalPrompt, { model: deepSeekModelName, onProgress, signal: abort.signal });
+      if (process.env.SHOW_MODEL_FOOTER === 'true') {
+        result.response += `\n\n---\n*[Answered by: ${result.model} via DeepSeek]*`;
+      }
+    } else if (effectiveOllama) {
       // User explicitly selected an Ollama model — use it directly, no fallback
       result = await runOllama(finalPrompt, { onProgress, signal: abort.signal, modelName: effectiveOllamaModel });
       if (process.env.SHOW_MODEL_FOOTER === 'true') {
