@@ -68,8 +68,27 @@ function buildSystemContext() {
   parts.push(`# Current Date\nToday is ${myt}.`);
 
   // Always inject available local tools so Claude knows about them
+  const vaultPath = process.env.VAULT_DIR || '/home/lerler/ObsidianVault';
   parts.push(
     `# Available Local Tools\n` +
+    `## Obsidian Vault — save notes\n` +
+    `The bot has DIRECT write access to the Obsidian vault at: ${vaultPath}\n` +
+    `Inbox folder: ${vaultPath}/00-inbox/\n` +
+    `To save a note, use the Write tool to create a markdown file:\n` +
+    `\`\`\`\n` +
+    `${vaultPath}/00-inbox/YYYY-MM-DD-slug.md\n` +
+    `\`\`\`\n` +
+    `Frontmatter format:\n` +
+    `\`\`\`markdown\n` +
+    `---\n` +
+    `title: Note Title\n` +
+    `tags: [tag1, tag2]\n` +
+    `source: <url if applicable>\n` +
+    `date: YYYY-MM-DD\n` +
+    `---\n` +
+    `\`\`\`\n` +
+    `NEVER say "I don't have access to your Obsidian vault" — you DO have direct filesystem access. Just write the file.\n` +
+    `The user can also use the /save Telegram command for quick saves.\n\n` +
     `## Word / .docx generation\n` +
     `Run via Bash:\n` +
     `\`\`\`bash\n` +
