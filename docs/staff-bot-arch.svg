@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 590" width="960" height="590">
+  <defs>
+    <marker id="arr-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+    <marker id="arr-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#059669"/></marker>
+    <marker id="arr-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000018"/></filter>
+  </defs>
+  <rect width="960" height="590" fill="#ffffff"/>
+  <rect x="272" y="98" width="380" height="393" rx="10" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="7,3"/>
+  <text x="288" y="117" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#7c3aed">K45VD (local server)</text>
+  <rect x="676" y="208" width="262" height="268" rx="10" fill="#fff8f1" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="7,3"/>
+  <text x="692" y="227" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#ea580c">External Services</text>
+  <rect x="384" y="33" width="192" height="50" rx="24" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="480" y="54" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#0369a1">User</text>
+  <text x="480" y="71" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#0284c7">via Telegram</text>
+  <rect x="292" y="123" width="342" height="68" rx="8" fill="#4f46e5" stroke="#3730a3" stroke-width="2" filter="url(#sh)"/>
+  <text x="463" y="152" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#ffffff">Staff-Bot</text>
+  <text x="463" y="170" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#c7d2fe">Node.js  ·  Telegraf  ·  Express</text>
+  <rect x="48" y="243" width="200" height="68" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="148" y="272" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#c2410c">Claude AI</text>
+  <text x="148" y="288" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#c2410c">Anthropic API</text>
+  <text x="148" y="303" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#ea580c">claude-sonnet-4-6</text>
+  <rect x="292" y="253" width="232" height="68" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="408" y="280" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#6d28d9">Obsidian Vault</text>
+  <text x="408" y="296" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#7c3aed">~/ObsidianVault/00-inbox/</text>
+  <text x="408" y="311" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#8b5cf6">69 notes  ·  auto-tagged</text>
+  <rect x="292" y="400" width="232" height="68" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="408" y="427" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#15803d">Wiki Storage</text>
+  <text x="408" y="443" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#16a34a">~/wiki/articles/  ·  index.json</text>
+  <text x="408" y="458" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#22c55e">Pre-compiled markdown</text>
+  <rect x="692" y="238" width="228" height="68" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="806" y="267" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#be123c">n8n</text>
+  <text x="806" y="283" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#be123c">Hostinger  ·  Orchestration</text>
+  <text x="806" y="298" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#e11d48">Ingest  ·  Update  ·  Query</text>
+  <rect x="692" y="388" width="228" height="68" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="806" y="417" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#1d4ed8">DeepSeek API</text>
+  <text x="806" y="433" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#1d4ed8">deepseek-chat</text>
+  <text x="806" y="448" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#3b82f6">Pre-compile notes to wiki</text>
+  <path d="M 480,83 L 480,108 L 463,108 L 463,123" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="432" y="91" width="60" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="462" y="102" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#2563eb">message</text>
+  <path d="M 292,147 L 265,147 L 265,277 L 248,277" stroke="#2563eb" stroke-width="1.8" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="218" y="197" width="50" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="243" y="208" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#2563eb">query</text>
+  <path d="M 248,291 L 272,291 L 272,167 L 292,167" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-gray)"/>
+  <rect x="218" y="222" width="60" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="248" y="233" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#6b7280">response</text>
+  <path d="M 408,191 L 408,253" stroke="#059669" stroke-width="1.8" fill="none" marker-end="url(#arr-green)"/>
+  <rect x="358" y="212" width="60" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="388" y="223" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#059669">save note</text>
+  <path d="M 524,282 L 608,282 L 608,272 L 692,272" stroke="#ea580c" stroke-width="1.8" fill="none" marker-end="url(#arr-orange)"/>
+  <rect x="542" y="268" width="60" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="572" y="279" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#ea580c">webhook</text>
+  <path d="M 806,306 L 806,388" stroke="#2563eb" stroke-width="1.8" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="757" y="338" width="72" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="793" y="349" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#2563eb">pre-compile</text>
+  <path d="M 692,422 L 614,422 L 614,434 L 524,434" stroke="#059669" stroke-width="1.8" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-green)"/>
+  <rect x="543" y="418" width="72" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="579" y="429" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#059669">write article</text>
+  <path d="M 634,147 L 660,147 L 660,222 L 806,222 L 806,238" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-blue)"/>
+  <rect x="664" y="177" width="66" height="15" rx="3" fill="white" opacity="0.92"/>
+  <text x="697" y="188" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#2563eb">wiki query</text>
+  <rect x="28" y="505" width="450" height="68" rx="6" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="44" y="522" font-family="system-ui,sans-serif" font-size="10" font-weight="600" fill="#374151">Legend</text>
+  <line x1="44" y1="540" x2="70" y2="540" stroke="#2563eb" stroke-width="1.6"/>
+  <polygon points="70,537 78,540 70,543" fill="#2563eb"/>
+  <text x="84" y="544" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Data flow</text>
+  <line x1="160" y1="540" x2="186" y2="540" stroke="#059669" stroke-width="1.6"/>
+  <polygon points="186,537 194,540 186,543" fill="#059669"/>
+  <text x="200" y="544" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Write / save</text>
+  <line x1="290" y1="540" x2="316" y2="540" stroke="#ea580c" stroke-width="1.6"/>
+  <polygon points="316,537 324,540 316,543" fill="#ea580c"/>
+  <text x="330" y="544" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Webhook trigger</text>
+  <line x1="44" y1="560" x2="70" y2="560" stroke="#6b7280" stroke-width="1.6" stroke-dasharray="4,2"/>
+  <polygon points="70,557 78,560 70,563" fill="#6b7280"/>
+  <text x="84" y="564" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Response (async)</text>
+  <line x1="190" y1="560" x2="216" y2="560" stroke="#059669" stroke-width="1.6" stroke-dasharray="4,2"/>
+  <polygon points="216,557 224,560 216,563" fill="#059669"/>
+  <text x="230" y="564" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Write (async)</text>
+  <line x1="330" y1="560" x2="356" y2="560" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,2"/>
+  <polygon points="356,557 364,560 356,563" fill="#2563eb"/>
+  <text x="370" y="564" font-family="system-ui,sans-serif" font-size="10" fill="#374151">Query (async)</text>
+  <rect x="260" y="2" width="440" height="24" rx="4" fill="white" opacity="0.95"/>
+  <text x="480" y="18" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="16" font-weight="700" fill="#111827">Staff-Bot — System Architecture</text>
+</svg>
