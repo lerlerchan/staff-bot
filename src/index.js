@@ -106,6 +106,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const os = require('os');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN, {
   telegram: {
@@ -119,6 +120,10 @@ const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
 
 // Track users currently being processed to prevent duplicate spawns
 const processingUsers = new Map(); // userId -> { startTime, messageId, abort }
+
+// Per-user last message (for /retry) and system prompts (for /sys)
+const lastUserMessage = new Map(); // userId -> last message text
+const userSystemPrompts = new Map(); // userId -> custom system prompt string
 
 // Helper: Resolve file path relative to workspace (security: prevent path traversal)
 const resolvePath = (filePath) => {
@@ -430,20 +435,19 @@ bot.command('save', async (ctx) => {
   const body = ctx.message.text.slice(6).trim(); // strip "/save "
   if (!body) return ctx.reply('Usage: /save <title>\n<content or url>');
 
-  // Support both "/save title\ncontent" and "/save title content-or-url" (single line)
+  // Format: /save <title>\n<content|url>  — title is full first line, content after newline
+  // Single-line fallback: auto-generate title from first 5 words, use full body as content
   const newlineIdx = body.indexOf('\n');
   let title, content;
   if (newlineIdx !== -1) {
     title = body.slice(0, newlineIdx).trim();
     content = body.slice(newlineIdx + 1).trim();
   } else {
-    const spaceIdx = body.indexOf(' ');
-    if (spaceIdx === -1) return ctx.reply('Usage: /save <title> <url or content>');
-    title = body.slice(0, spaceIdx).trim();
-    content = body.slice(spaceIdx + 1).trim();
+    content = body.trim();
+    title = content.split(/\s+/).slice(0, 5).join(' ');
   }
 
-  if (!content) return ctx.reply('Usage: /save <title> <url or content>');
+  if (!content) return ctx.reply('Usage: /save <title>\n<content or url>');
 
   try {
     const { filename, preview } = await saveNote(title, content);
@@ -459,6 +463,81 @@ bot.command('savelist', async (ctx) => {
   const notes = listNotes(5);
   if (notes.length === 0) return ctx.reply('No notes saved yet.');
   await ctx.reply(`📚 Last ${notes.length} saved notes:\n\n${notes.map((n, i) => `${i + 1}. ${n}`).join('\n')}`);
+});
+
+bot.command('retry', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const last = lastUserMessage.get(userId);
+  if (!last) return ctx.reply('No previous message to retry.');
+  // Mutate ctx so the text handler below picks it up as a normal message
+  ctx.message = { ...ctx.message, text: last };
+  await ctx.reply(`🔄 Retrying: _${last.slice(0, 80)}${last.length > 80 ? '…' : ''}_`, { parse_mode: 'Markdown' });
+  return bot.handleUpdate({ ...ctx.update, message: ctx.message });
+});
+
+bot.command('sys', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const prompt = ctx.message.text.slice(5).trim();
+  if (!prompt) {
+    const current = userSystemPrompts.get(userId);
+    return ctx.reply(current
+      ? `Current system prompt:\n\`${current}\`\n\nSend /sys clear to remove it.`
+      : 'No system prompt set. Usage: /sys <your prompt>');
+  }
+  if (prompt === 'clear') {
+    userSystemPrompts.delete(userId);
+    return ctx.reply('✅ System prompt cleared.');
+  }
+  userSystemPrompts.set(userId, prompt);
+  ctx.reply(`✅ System prompt set:\n\`${prompt}\``);
+});
+
+bot.command('keys', (ctx) => {
+  const check = (name, envKey) => `${name}: ${process.env[envKey] ? '✅' : '❌'}`;
+  const lines = [
+    check('Claude CLI', 'ANTHROPIC_AUTH_TOKEN'),
+    check('DeepSeek', 'DEEPSEEK_API_KEY'),
+    check('Telegram', 'TELEGRAM_BOT_TOKEN'),
+    check('Gmail', 'GMAIL_CLIENT_ID'),
+    check('Google Drive', 'GDRIVE_CLIENT_ID'),
+    check('Ollama', 'OLLAMA_BASE_URL'),
+  ];
+  ctx.reply(`🔑 API Keys\n\n${lines.join('\n')}`);
+});
+
+bot.command('ls', async (ctx) => {
+  const workspace = path.resolve(process.env.WORKSPACE_DIR || process.cwd());
+  try {
+    const entries = fs.readdirSync(workspace, { withFileTypes: true });
+    if (entries.length === 0) return ctx.reply('Workspace is empty.');
+    const lines = entries.slice(0, 50).map(e => `${e.isDirectory() ? '📁' : '📄'} ${e.name}`);
+    if (entries.length > 50) lines.push(`… and ${entries.length - 50} more`);
+    await ctx.reply(`📂 ${workspace}\n\n${lines.join('\n')}`);
+  } catch (e) {
+    ctx.reply(`❌ ${e.message}`);
+  }
+});
+
+bot.command('export', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const arg = ctx.message.text.split(' ')[1];
+  const limit = Math.min(parseInt(arg, 10) || 50, 200);
+  const rows = getRecentMessages(userId, limit);
+  if (rows.length === 0) return ctx.reply('No conversation history found.');
+
+  const lines = rows.map(r => {
+    const ts = new Date(r.created_at).toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' });
+    return `## [${ts}]\n\n**You:** ${r.user_message}\n\n**Bot:** ${r.bot_response}`;
+  });
+  const md = `# Conversation Export\n\nUser: ${userId} | Messages: ${rows.length}\n\n---\n\n${lines.join('\n\n---\n\n')}`;
+
+  const filename = path.join(process.env.WORKSPACE_DIR || os.tmpdir(), `export_${userId}_${Date.now()}.md`);
+  fs.writeFileSync(filename, md, 'utf8');
+  try {
+    await ctx.replyWithDocument({ source: filename, filename: path.basename(filename) });
+  } finally {
+    fs.unlinkSync(filename);
+  }
 });
 
 // Handle text messages
@@ -565,6 +644,7 @@ bot.on('text', async (ctx) => {
   // Run Claude or Ollama — awaited directly (not setImmediate) to prevent Telegraf re-queue
   const startTime = Date.now();
   let prompt = ctx.message.text;
+  lastUserMessage.set(userId, prompt);
 
   // Check for /ollama prefix to force Ollama routing
   let forcedOllama = false;
@@ -576,6 +656,10 @@ bot.on('text', async (ctx) => {
   try {
     // For Ollama, use simple prompt without context injection
     let finalPrompt = prompt;
+
+    // Prepend user system prompt if set
+    const sysPrompt = userSystemPrompts.get(userId);
+    if (sysPrompt) finalPrompt = `[System: ${sysPrompt}]\n\n${finalPrompt}`;
 
     if (!forcedOllama && !useOllama && !effectiveOllama) {
       // Claude path — inject full context
