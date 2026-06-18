@@ -100,6 +100,7 @@ const { runClaude, isComplexTask, shouldUseOllama, detectMcpServers } = require(
 const { runOllama, isOllamaAvailable, getAvailableModels } = require('./ollama-runner');
 const { logMessage, getRecentMessages, getPreferredModel, setPreferredModel, logEvent, getSessionEvents, getUserMaxTurns, setUserMaxTurns } = require('./database');
 const { isUserAllowed, splitMessage, markdownToHtml } = require('./utils');
+const { saveNote, listNotes } = require('./handlers/obsidianSave');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -238,7 +239,9 @@ bot.start((ctx) => ctx.reply(
   `Welcome to Agent K!\n\n` +
   `Commands:\n/new - New conversation\n/status - Bot status\n/model - Select AI model\n/test - Test CLI\n` +
   `/cancel - Cancel current request\n/cd <path> - Change workspace\n/sendfile <name> - Send file\n` +
-  `/debug_session - Show last session routing events\n/maxturn <n> - Set max turns (1-100)\n\nJust send a message!`
+  `/save <title>\\n<content|url> - Save to Obsidian\n/savelist - Last 5 saved notes\n` +
+  `/debug_session - Show last session routing events\n/maxturn <n> - Set max turns (1-100)\n\n` +
+  `Auto-save: prefix message with 📥 or #note\n\nJust send a message!`
 ));
 
 bot.command('chatid', (ctx) => {
@@ -409,9 +412,62 @@ bot.command('sendfile', async (ctx) => {
   }
 });
 
+bot.command('save', async (ctx) => {
+  const body = ctx.message.text.slice(6).trim(); // strip "/save "
+  if (!body) return ctx.reply('Usage: /save <title>\n<content or url>');
+
+  // Support both "/save title\ncontent" and "/save title content-or-url" (single line)
+  const newlineIdx = body.indexOf('\n');
+  let title, content;
+  if (newlineIdx !== -1) {
+    title = body.slice(0, newlineIdx).trim();
+    content = body.slice(newlineIdx + 1).trim();
+  } else {
+    const spaceIdx = body.indexOf(' ');
+    if (spaceIdx === -1) return ctx.reply('Usage: /save <title> <url or content>');
+    title = body.slice(0, spaceIdx).trim();
+    content = body.slice(spaceIdx + 1).trim();
+  }
+
+  if (!content) return ctx.reply('Usage: /save <title> <url or content>');
+
+  try {
+    const { filename, preview } = await saveNote(title, content);
+    await ctx.reply(
+      `✅ Saved: ${filename}\n📁 00-inbox/${filename}\n\n${preview}${preview.length >= 100 ? '...' : ''}`
+    );
+  } catch (e) {
+    await ctx.reply(`❌ Save failed: ${e.message}`);
+  }
+});
+
+bot.command('savelist', async (ctx) => {
+  const notes = listNotes(5);
+  if (notes.length === 0) return ctx.reply('No notes saved yet.');
+  await ctx.reply(`📚 Last ${notes.length} saved notes:\n\n${notes.map((n, i) => `${i + 1}. ${n}`).join('\n')}`);
+});
+
 // Handle text messages
 bot.on('text', async (ctx) => {
   if (ctx.message.text.startsWith('/')) return;
+
+  // Auto-save trigger: messages starting with 📥 or #note
+  const rawText = ctx.message.text;
+  if (rawText.startsWith('📥') || /^#note\b/i.test(rawText)) {
+    const stripped = rawText.replace(/^📥\s*|^#note\s*/i, '').trim();
+    const newlineIdx = stripped.indexOf('\n');
+    const title = newlineIdx === -1 ? stripped.slice(0, 60) : stripped.slice(0, newlineIdx).trim();
+    const content = newlineIdx === -1 ? stripped : stripped.slice(newlineIdx + 1).trim();
+    try {
+      const { filename, preview } = await saveNote(title || 'Untitled', content || stripped);
+      await ctx.reply(
+        `✅ Saved: ${filename}\n📁 00-inbox/${filename}\n\n${preview}${preview.length >= 100 ? '...' : ''}`
+      );
+    } catch (e) {
+      await ctx.reply(`❌ Save failed: ${e.message}`);
+    }
+    return;
+  }
 
   const userId = ctx.from.id.toString();
   const chatId = ctx.chat.id;

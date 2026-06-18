@@ -230,6 +230,7 @@ A DuckDuckGo MCP server (`duckduckgo`) is available. Use it proactively whenever
 | `PORT`                 | Server port (default: 3000)                         |
 | `DB_PATH`              | SQLite database path (default: `data/bot.db`)       |
 | `PLAYWRIGHT_CHROME_PATH`| Chrome path for Playwright (auto-detect if unset)  |
+| `OBSIDIAN_VAULT_PATH`  | Obsidian vault root (default: `~/ObsidianVault`)    |
 
 ---
 
@@ -245,6 +246,10 @@ A DuckDuckGo MCP server (`duckduckgo`) is available. Use it proactively whenever
 | `/cd <path>`      | Change the active workspace directory    |
 | `/sendfile <name>`| Send a file from the workspace           |
 | `/chatid`         | Show current chat ID                     |
+| `/save <title>`   | Save plain text or URL to Obsidian Inbox |
+| `/savelist`       | Show last 5 saved notes in Obsidian Inbox|
+| `📥 <text>`       | Auto-save message to Obsidian (no command needed) |
+| `#note <text>`    | Auto-save message to Obsidian (no command needed) |
 
 ---
 
@@ -256,6 +261,7 @@ A DuckDuckGo MCP server (`duckduckgo`) is available. Use it proactively whenever
 - **Media uploads** — Photos and documents sent to the bot are downloaded to `WORKSPACE_DIR` then passed to Claude
 - **Message formatting** — Markdown responses are converted to Telegram HTML; tables are reformatted for readability
 - **Smart MCP** — MCP servers (Playwright, Gmail, Chrome DevTools) only loaded when message keywords match
+- **Obsidian save** — `/save`, `/savelist`, and auto-save prefixes (`📥`, `#note`) write `.md` notes to `~/ObsidianVault/Inbox/` with YAML frontmatter; URL content is fetched and extracted via cheerio
 
 ---
 
@@ -377,3 +383,12 @@ docker run -d --env-file .env agent-k
 **Zeabur:** Config is in `zeabur.json`. Push to repo and connect via Zeabur dashboard.
 
 Set `WEBHOOK_URL` to your public HTTPS URL for production. Without it, the bot falls back to long polling.
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
