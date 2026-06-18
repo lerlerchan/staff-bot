@@ -254,6 +254,8 @@ const runClaude = (message, { onProgress, signal, modelOverride, maxTurns } = {}
     const SAFE_ENV_KEYS = [
       'HOME', 'PATH', 'SHELL', 'LANG', 'LANGUAGE', 'TERM', 'USER', 'TMPDIR', 'TMP', 'TEMP',
       'WORKSPACE_DIR', 'CI', 'NODE_ENV',
+      // Obsidian vault
+      'VAULT_DIR', 'OBSIDIAN_VAULT_PATH',
       // Claude CLI specific
       'ANTHROPIC_API_KEY', 'CLAUDE_CODE_USE_BEDROCK', 'AWS_REGION',
     ];

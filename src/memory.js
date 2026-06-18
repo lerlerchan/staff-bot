@@ -87,7 +87,9 @@ function buildSystemContext() {
     `date: YYYY-MM-DD\n` +
     `---\n` +
     `\`\`\`\n` +
-    `NEVER say "I don't have access to your Obsidian vault" — you DO have direct filesystem access. Just write the file.\n` +
+    `NEVER say "I don't have access to your Obsidian vault" — you DO have direct filesystem access via the Write tool.\n` +
+    `When the user asks to save something to Obsidian: USE THE Write TOOL IMMEDIATELY to create the file. Do NOT describe what you would do. Do NOT ask for confirmation. Just write the file.\n` +
+    `After writing, confirm: "✅ Saved to 00-inbox/FILENAME.md"\n` +
     `The user can also use the /save Telegram command for quick saves.\n\n` +
     `## Word / .docx generation\n` +
     `Run via Bash:\n` +
