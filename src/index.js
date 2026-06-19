@@ -245,9 +245,10 @@ bot.start((ctx) => ctx.reply(
   `Welcome to Agent K!\n\n` +
   `Commands:\n/new - New conversation\n/status - Bot status\n/model - Select AI model\n/test - Test CLI\n` +
   `/cancel - Cancel current request\n/cd <path> - Change workspace\n/sendfile <name> - Send file\n` +
-  `/save <title>\\n<content|url> - Save to Obsidian\n/savelist - Last 5 saved notes\n` +
+  `/save <title>\\n<content|url> - Save text to Obsidian\n/savelist - Last 5 saved notes\n` +
   `/debug_session - Show last session routing events\n/maxturn <n> - Set max turns (1-100)\n\n` +
-  `Auto-save: prefix message with 📥 or #note\n\nJust send a message!`
+  `Auto-save: prefix message with 📥 or #note\n` +
+  `Save file: send photo/doc with caption starting /save <title> or 📥 <title>\n\nJust send a message!`
 ));
 
 bot.command('chatid', (ctx) => {
@@ -845,15 +846,58 @@ const handleMedia = async (ctx, getFile, prompt) => {
   }
 };
 
-bot.on('photo', (ctx) => handleMedia(ctx,
-  (c) => c.message.photo[c.message.photo.length - 1].file_id,
-  ctx.message.caption || 'Analyze this image'
-));
+// Save file directly to Obsidian inbox when caption starts with /save or 📥
+const handleMediaSave = async (ctx, getFileId, origName, ext) => {
+  const caption = ctx.message.caption || '';
+  const isSaveTrigger = caption.startsWith('/save') || caption.startsWith('📥');
+  if (!isSaveTrigger) return false;
 
-bot.on('document', (ctx) => handleMedia(ctx,
-  (c) => c.message.document.file_id,
-  ctx.message.caption || `Process: ${ctx.message.document.file_name}`
-));
+  // Extract title from caption: strip trigger prefix, use remainder or origName
+  const stripped = caption.replace(/^\/save\s*|^📥\s*/u, '').trim();
+  const title = stripped || origName?.replace(/\.[^.]+$/, '') || 'untitled';
+
+  const vaultInbox = process.env.VAULT_DIR
+    ? `${process.env.VAULT_DIR}/00-inbox`
+    : '/home/lerler/ObsidianVault/00-inbox';
+  const date = new Date().toISOString().slice(0, 10);
+  const slug = title.toLowerCase().replace(/[^\w]+/g, '-').slice(0, 60);
+  const filename = `${date}-${slug}${ext}`;
+  const dest = `${vaultInbox}/${filename}`;
+
+  try {
+    const link = await ctx.telegram.getFileLink(getFileId(ctx));
+    await downloadFile(link.href, dest);
+    await ctx.reply(`✅ Saved to 00-inbox/${filename}`);
+  } catch (e) {
+    await ctx.reply(`❌ Save failed: ${e.message}`);
+  }
+  return true;
+};
+
+bot.on('photo', async (ctx) => {
+  const ext = '.jpg';
+  const saved = await handleMediaSave(ctx,
+    (c) => c.message.photo[c.message.photo.length - 1].file_id,
+    'image', ext
+  );
+  if (!saved) handleMedia(ctx,
+    (c) => c.message.photo[c.message.photo.length - 1].file_id,
+    ctx.message.caption || 'Analyze this image'
+  );
+});
+
+bot.on('document', async (ctx) => {
+  const origName = ctx.message.document.file_name || 'file';
+  const ext = path.extname(origName) || '.bin';
+  const saved = await handleMediaSave(ctx,
+    (c) => c.message.document.file_id,
+    origName, ext
+  );
+  if (!saved) handleMedia(ctx,
+    (c) => c.message.document.file_id,
+    ctx.message.caption || `Process: ${origName}`
+  );
+});
 
 // Error handling
 bot.catch((err, ctx) => {
